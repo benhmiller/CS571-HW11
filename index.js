@@ -49,7 +49,9 @@ app.post('/', (req, res) => {
   // A map of intent names to callback functions.
   // The "HelloWorld" is an example only -- you may delete it.
   const intentMap = {
-    "HelloWorld": doHelloWorld
+    "HelloWorld": doHelloWorld,
+    "GetWhenPosted": doLatestPost,
+    "GetChatroomMessages": doGetPosts
   }
 
   if (intent in intentMap) {
@@ -87,5 +89,86 @@ async function doHelloWorld(req, res) {
         }
       }
     ]
+  })
+}
+
+async function doLatestPost(req, res) {
+  const chatroomName = req.body.queryResult.parameters.chatroom;
+  const resp = 
+    await fetch("https://cs571.org/api/f23/hw11/messages?chatroom=" + chatroomName + "&page=1", {
+            headers: {
+              "X-CS571-ID": "bid_b12898bda46ac66e7703c0762de9def4c784a66f024e5b5de19d6da1de871384"
+            }
+          });
+  const respBody = await resp.json();
+  const latestMessageDate = new Date(respBody.messages[0].created);
+  console.log(latestMessageDate.toLocaleDateString());
+
+
+  res.status(200).send({
+    fulfillmentMessages: [
+      {
+        text: {
+          text: [
+            'The last message in ' + chatroomName + ' was posted on ' + `${latestMessageDate.toLocaleDateString()}` + 
+            ' at ' + `${latestMessageDate.toLocaleTimeString()}` + '!'
+          ]
+        }
+      }
+    ]
+  })
+}
+
+async function doGetPosts(req, res) {
+  const chatroomName = req.body.queryResult.parameters.chatroom;
+
+  // Calculate the number of posts to extract
+  let num_posts = 0;
+  if(req.body.queryResult.parameters.numMessages > 0) {
+    num_posts = parseInt(req.body.queryResult.parameters.numMessages);
+  }
+  else {
+    num_posts = 1;
+  }
+
+  // Fetch chatroom mesage from API
+  const resp = 
+    await fetch("https://cs571.org/api/f23/hw11/messages?chatroom=" + chatroomName + "&page=1", {
+            headers: {
+              "X-CS571-ID": "bid_b12898bda46ac66e7703c0762de9def4c784a66f024e5b5de19d6da1de871384"
+            }
+          });
+  const respBody = await resp.json();
+
+  // Extract correct number of posts
+  let posts = []
+  if(num_posts < 5) {
+    posts = respBody.messages.slice(0, num_posts)
+  }
+  else {
+    posts = respBody.messages.slice(0, 5)
+  }
+
+  // Construct card objects
+  let cards = []
+  for(let i = 0; i < posts.length; i++) {
+    const card = {
+      card: {
+        title: posts[i].title,
+        subtitle: posts[i].content,
+        buttons: [
+          {
+            text: 'READ MORE',
+            postback: 'https://cs571.org/f23/badgerchat/chatrooms/' + chatroomName + '/'
+          }
+        ]
+      }
+    }
+    cards.push(card)
+  }
+
+  // Send cards to DialogFlow
+  res.status(200).send({
+    fulfillmentMessages: cards
   })
 }
