@@ -160,15 +160,15 @@ async function doGetPosts(req, res) {
     if(num_posts < 5) {
       posts = respBody.messages.slice(0, num_posts)
       if(num_posts === 1) {
-        response = "Here is the latest message from" + chatroomName + "!"
+        response = "Here is the latest message from " + chatroomName + "!"
       }
       else {
-        response = "Here are the latest " + num_posts + "messages from" + chatroomName + "!"
+        response = "Here are the latest " + num_posts + " messages from " + chatroomName + "!"
       }
     }
     else {
       posts = respBody.messages.slice(0, 5)
-      response = "Sorry, you may only get up to the latest 5 messages. Here are the 5 latest messages from" + chatroomName + "!"
+      response = "Sorry, you may only get up to the latest 5 messages. Here are the 5 latest messages from " + chatroomName + "!"
     }
 
     // Construct card objects
