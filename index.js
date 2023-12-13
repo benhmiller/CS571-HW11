@@ -175,7 +175,7 @@ async function doGetPosts(req, res) {
     let cards = posts.map(post => ({
       card: {
         title: post.title,
-        subtitle: post.content,
+        subtitle: post.poster,
         buttons: [
           {
             text: 'READ MORE',
